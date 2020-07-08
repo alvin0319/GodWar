@@ -26,13 +26,13 @@
 declare(strict_types=1);
 namespace alvin0319\GodWar;
 
+use alvin0319\GodWar\command\GodWarCommand;
 use alvin0319\GodWar\entity\Fireball;
 use alvin0319\GodWar\entity\TridentEntity;
 use alvin0319\GodWar\task\GameTickTask;
 use InvalidStateException;
 use pocketmine\entity\Entity;
 use pocketmine\item\Item;
-use pocketmine\level\Level;
 use pocketmine\level\Position;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
@@ -40,14 +40,17 @@ use pocketmine\utils\Config;
 use ZipArchive;
 use function array_diff;
 use function array_values;
+use function count;
 use function explode;
 use function file_exists;
+use function floatval;
 use function intval;
 use function is_dir;
 use function is_file;
 use function is_null;
 use function rmdir;
 use function scandir;
+use function substr;
 use function unlink;
 
 class GodWar extends PluginBase{
@@ -64,6 +67,8 @@ class GodWar extends PluginBase{
 
 	/** @var Room[] */
 	protected $rooms = [];
+
+	protected $roomIds = 0;
 
 	public function onLoad() : void{
 		if(self::$instance instanceof GodWar){
@@ -91,7 +96,7 @@ class GodWar extends PluginBase{
 			return;
 		}
 
-		if(($this->getConfig()->getNested("red-spawn", "0:0:0:world") === "0:0:0:world") or ($this->getConfig()->getNested("blue-spawn", "0:0:0:world"))){
+		if(($this->getConfig()->getNested("red-spawn", "0:0:0:world") === "0:0:0:world") or ($this->getConfig()->getNested("blue-spawn", "0:0:0:world") === "0:0:0:world")){
 			$this->getLogger()->critical("You need to set up red-spawn and blue-spawn in config.yml.");
 			$this->getServer()->getPluginManager()->disablePlugin($this);
 			return;
@@ -100,10 +105,10 @@ class GodWar extends PluginBase{
 		[$redX, $redY, $redZ, $worldName] = explode(":", $this->getConfig()->getNested("red-spawn"));
 		[$blueX, $blueY, $blueZ, $_] = explode(":", $this->getConfig()->getNested("blue-spawn"));
 
-		$world = $this->getServer()->getLevelByName($worldName);
-
-		for($i = 0; $i < intval($this->getConfig()->getNested("room", 2)); $i++){
-			$this->rooms[$i] = new Room($i, $this->getConfig()->getNested("time", 2000), new Position(intval($redX), intval($redY), intval($redZ), $world), new Position(intval($blueX), intval($blueY), intval($blueZ), $world), $worldName);
+		for($i = 0; $i < $this->roomIds = intval($this->getConfig()->getNested("room", 2)); $i++){
+			$this->loadMap($i);
+			$world = $this->getServer()->getLevelByName("godwar_{$i}");
+			$this->rooms[$i] = new Room($i, $this->getConfig()->getNested("time", 2000), new Position(floatval($redX), floatval($redY), floatval($redZ), $world), new Position(intval($blueX), intval($blueY), intval($blueZ), $world), "godwar_{$i}");
 		}
 
 		$this->invConfig = new Config($this->getDataFolder() . "Inventories.yml", Config::YAML);
@@ -114,33 +119,56 @@ class GodWar extends PluginBase{
 
 		$this->getScheduler()->scheduleRepeatingTask(new GameTickTask(), 20);
 		$this->getServer()->getPluginManager()->registerEvents(new EventListener(), $this);
+
+		$this->getServer()->getCommandMap()->register("godwar", new GodWarCommand());
+	}
+
+	public function onDisable() : void{
+		$this->invConfig->setAll($this->db);
+		$this->invConfig->save();
 	}
 
 	public function loadMap(int $mapId) : bool{
 		$zip = new ZipArchive();
 		if($zip->open($this->getDataFolder() . $this->getConfig()->getNested("world-zip")) === true){
-			$zip->extractTo("godwar_{$mapId}");
+			$zip->extractTo($this->getServer()->getDataPath() . "worlds/godwar_{$mapId}");
+			$this->getServer()->loadLevel("godwar_{$mapId}");
 			return $zip->close();
 		}
 		return false;
 	}
 
 	public function recursiveRmdirWorld(string $dir) : void{
-		if(($world = $this->getServer()->getLevelByName($dir)) instanceof Level){
-			$this->getServer()->unloadLevel($world);
-		}
-		if(file_exists($path = $this->getServer()->getDataPath() . "worlds/" . $dir)){
-			$scanned = array_diff(scandir($this->getDataFolder()), [".", ".."]);
-			foreach($scanned as $file){
-				$realPath = $path . $file;
-				if(is_file($realPath)){
-					unlink($realPath);
-				}elseif(is_dir($realPath)){
-					$this->recursiveRmdirWorld($realPath);
-					rmdir($realPath);
+		if(is_dir($dir = $this->getServer()->getDataPath() . "worlds/{$dir}")){
+			if(substr($dir, -1) !== "/"){
+				$dir .= "/";
+			}
+			foreach(scandir($dir) as $file){
+				if($file !== "." and $file !== ".."){
+					$realPath = $dir . $file;
+
+					if(file_exists($realPath)){
+						if(is_file($realPath)){
+							unlink($realPath);
+						}elseif(is_dir($realPath)){
+							$ssss = array_diff(scandir($dir . $file), [".", ".."]);
+
+							if(count($ssss) === 0){
+								rmdir($realPath);
+							}else{
+								$this->recursiveRmdirWorld($realPath);
+							}
+						}
+					}
 				}
 			}
-			rmdir($path);
+			$ssss = array_diff(scandir($dir), [".", ".."]);
+
+			if(count($ssss) === 0){
+				rmdir($dir);
+			}else{
+				$this->recursiveRmdirWorld($dir);
+			}
 		}
 	}
 
@@ -185,15 +213,26 @@ class GodWar extends PluginBase{
 	}
 
 	public function restoreInventory(Player $player) : void{
-		$player->getInventory()->clearAll();
-		$player->getArmorInventory()->clearAll();
+		if(isset($this->db[$player->getName()])){
+			$player->getInventory()->clearAll();
+			$player->getArmorInventory()->clearAll();
 
-		foreach($this->db[$player->getName()]["inv"] as $slot => $itemData){
-			$player->getInventory()->setItem($slot, Item::jsonDeserialize($itemData));
+			foreach($this->db[$player->getName()]["inv"] as $slot => $itemData){
+				$player->getInventory()->setItem($slot, Item::jsonDeserialize($itemData));
+			}
+			foreach($this->db[$player->getName()]["armorinv"] as $slot => $itemData){
+				$player->getArmorInventory()->setItem($slot, Item::jsonDeserialize($itemData));
+			}
+			unset($this->db[$player->getName()]);
 		}
-		foreach($this->db[$player->getName()]["armorinv"] as $slot => $itemData){
-			$player->getArmorInventory()->setItem($slot, Item::jsonDeserialize($itemData));
+	}
+
+	public function getAvailableRoom(Player $player) : ?Room{
+		foreach($this->getRooms() as $room){
+			if($room->canJoin($player)){
+				return $room;
+			}
 		}
-		unset($this->db[$player->getName()]);
+		return null;
 	}
 }

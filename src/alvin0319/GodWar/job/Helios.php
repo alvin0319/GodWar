@@ -53,7 +53,7 @@ class Helios extends Job{
 					if(!$this->hasCool(self::BLOCK_VISION)){
 						$this->setCool(self::BLOCK_VISION, 60);
 						foreach($this->getPlayer()->getLevel()->getPlayers() as $player){
-							if($this->getPlayer()->distance($player) <= 8){
+							if($this->getPlayer()->distance($player) <= 8 && $player !== $this->getPlayer()){
 								if(!$this->getRoom()->isSameTeam($this->getPlayer(), $player)){
 									$player->addEffect(new EffectInstance(Effect::getEffect(Effect::BLINDNESS), 20 * 5, 0));
 								}

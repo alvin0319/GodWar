@@ -39,5 +39,6 @@ class Hestia extends Job{
 	}
 
 	public function useSkillOn(Item $item) : ?string{
+		return null;
 	}
 }

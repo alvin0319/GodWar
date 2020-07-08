@@ -28,6 +28,8 @@ namespace alvin0319\GodWar\entity;
 
 use pocketmine\block\Block;
 use pocketmine\entity\Entity;
+use pocketmine\entity\EntityIds;
+use pocketmine\entity\Living;
 use pocketmine\entity\projectile\Projectile;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
@@ -37,6 +39,11 @@ use pocketmine\Player;
 
 class TridentEntity extends Projectile{
 
+	public const NETWORK_ID = EntityIds::TRIDENT;
+
+	public $width = 0.5;
+	public $height = 0.5;
+
 	protected $critical = false;
 
 	public function onCollideWithPlayer(Player $player) : void{
@@ -45,12 +52,11 @@ class TridentEntity extends Projectile{
 
 	public function onHit(ProjectileHitEvent $event) : void{
 		$player = $event->getEntity();
-		$event->setCancelled();
 		$this->flagForDespawn();
-		if($player instanceof Player){
-			$player->setOnFire(5);
-			$player->attack(new EntityDamageByEntityEvent($this, $player, EntityDamageEvent::CAUSE_PROJECTILE, ($this->critical ? 10 : 5)));
-			if($this->critical){
+		$player->setOnFire(5);
+		$player->attack(new EntityDamageByEntityEvent($this, $player, EntityDamageEvent::CAUSE_PROJECTILE, ($this->critical ? 10 : 5)));
+		if($this->critical){
+			if($player instanceof Living){
 				$player->knockBack($this, 0, $this->x - $player->x, $this->z - $player->z);
 			}
 		}

@@ -50,6 +50,7 @@ class Zeus extends Job{
 			if($item->getNamedTagEntry(Job::SKILL1_NAME) !== null){
 				if(!$this->hasCool(self::BLOCK_ALL_SKILLS)){
 					$this->setCool(self::BLOCK_ALL_SKILLS, 120);
+					$this->getRoom()->blockAllSkills();
 					return "Block all skills";
 				}
 			}

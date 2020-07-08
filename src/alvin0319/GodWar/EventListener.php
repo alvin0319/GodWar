@@ -34,6 +34,7 @@ use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerChatEvent;
 use pocketmine\event\player\PlayerInteractEvent;
+use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\item\Item;
@@ -50,6 +51,10 @@ use function substr;
 use function trim;
 
 class EventListener implements Listener{
+
+	public function onPlayerJoin(PlayerJoinEvent $event) : void{
+		GodWar::getInstance()->restoreInventory($event->getPlayer());
+	}
 
 	public function onPlayerQuit(PlayerQuitEvent $event) : void{
 		if(($room = GodWar::getInstance()->getRoomForPlayer($event->getPlayer())) instanceof Room){
@@ -121,7 +126,7 @@ class EventListener implements Listener{
 						$job = $room->getJob($player);
 						$player->sendMessage(GodWar::$prefix . "You are " . $job->getName() . ".");
 						$player->sendMessage("§7" . $job->getDescription());
-					}elseif($event->getMessage() === "!bettlng"){
+					}elseif($event->getMessage() === "!betting"){
 						if($player->getInventory()->contains($item = ItemFactory::get(ItemIds::COBBLESTONE, 0, 32))){
 							$randItem = $this->getRandomItem();
 							$player->getInventory()->removeItem($item);

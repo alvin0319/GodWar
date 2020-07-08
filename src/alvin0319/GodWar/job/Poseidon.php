@@ -65,7 +65,7 @@ class Poseidon extends Job{
 						$this->setCool(self::TRIDENT, 50);
 
 						$nbt = Entity::createBaseNBT(
-							$this->getPlayer()->add(0, $this->getPlayer()->getEyeHeight(), 0),
+							$this->getPlayer()->add(0, $this->getPlayer()->getEyeHeight() + 1, 0),
 							$this->getPlayer()->getDirectionVector(),
 							($this->getPlayer()->yaw > 180 ? 360 : 0) - $this->getPlayer()->yaw,
 							-$this->getPlayer()->pitch

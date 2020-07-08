@@ -122,6 +122,7 @@ class Room{
 		$this->redTeam = [];
 		$this->blueTeam = [];
 		$this->running = false;
+		$this->waitTime = 60;
 
 		GodWar::getInstance()->recursiveRmdirWorld($this->worldName);
 		GodWar::getInstance()->loadMap($this->id);
@@ -151,11 +152,13 @@ class Room{
 
 	public function addPlayer(Player $player) : void{
 		if($this->canJoin($player)){
+			$this->broadcastMessage("{$player->getName()} has left the game");
 			$this->players[$player->getName()] = "none";
 		}
 	}
 
 	public function removePlayer(Player $player) : void{
+		$this->broadcastMessage("{$player->getName()} has joined the game.");
 		if(isset($this->players[$player->getName()])){
 			$redOrBlue = $this->players[$player->getName()];
 			switch($redOrBlue){
@@ -182,7 +185,7 @@ class Room{
 			new Helios($player, $this),
 			new Poseidon($player, $this),
 			new Hypnos($player, $this),
-			new Hestia($player, $this)
+			//new Hestia($player, $this)
 		];
 		return $jobs[array_rand($jobs)];
 	}
@@ -210,17 +213,20 @@ class Room{
 
 	public function start() : void{
 		$this->running = true;
-		shuffle($this->players);
-		foreach(array_keys($this->players) as $name){
+		$players = array_keys($this->players);
+		shuffle($players);
+		foreach($players as $name){
 			if(($target = $this->getServer()->getPlayerExact($name)) instanceof Player){
 				if(count($this->blueTeam) > count($this->redTeam)){
 					$this->players[$name] = self::TEAM_RED;
 					$job = $this->chooseJobFor($target);
 					$this->redTeam[$target->getName()] = $job;
+					$target->teleport($this->redSpawn);
 				}else{
 					$this->players[$name] = self::TEAM_BLUE;
 					$job = $this->chooseJobFor($target);
 					$this->blueTeam[$target->getName()] = $job;
+					$target->teleport($this->blueSpawn);
 				}
 			}
 		}
@@ -246,12 +252,14 @@ class Room{
 	public function syncTick() : void{
 		$this->sendProgressBar();
 		if(!$this->isRunning()){
-			if(count($this->players) === 6){
+			if(count($this->players) === 2){
 				--$this->waitTime;
+				if($this->waitTime === 0){
+					$this->start();
+				}
 			}
 		}else{
 			--$this->progress;
-
 
 			if($this->progress <= 0){
 				$this->end(null);
@@ -265,7 +273,7 @@ class Room{
 				$text = "§a-=-=-=-=-= [ §fGodWar §a] =-=-=-=-=-\n";
 				if($this->isRunning()){
 					$job = $this->getJob($player);
-					$text .= "Job: §a" . $job->getName() . "§r\n";
+					$text .= "Job: §a" . $job->getName() . "\n";
 					$text .= "Time left: " . $this->convertTimeToString($this->progress);
 					$cools = [];
 					if(count($job->getCoolTimes()) > 0){
