@@ -27,39 +27,37 @@ declare(strict_types=1);
 namespace alvin0319\GodWar\job;
 
 use alvin0319\GodWar\GodWar;
-use pocketmine\entity\Effect;
-use pocketmine\entity\EffectInstance;
-use pocketmine\entity\Entity;
+use alvin0319\GodWar\task\SleepTask;
+use pocketmine\entity\Attribute;
+use pocketmine\event\entity\EntityRegainHealthEvent;
 use pocketmine\item\BlazeRod;
 use pocketmine\item\Item;
-use pocketmine\Player;
 
-class Ares extends Job{
+class Hypnos extends Job{
 
-	public const STRENGTH = "strength";
+	public const SLEEP = "sleep";
 
-	public const TRIDENT = "trident";
+	public const HEAL = "heal";
 
 	public function getName() : string{
-		return "Ares";
+		return "Hypnos";
 	}
 
 	public function getDescription() : string{
-		return "Ares - God of War\n\nSkill 1: Level 1 power buff on teammates. Cooldown: 30 seconds\nSkill 2: Fire a trident. The opponent who hit the trident takes 5 damage and burns for 5 seconds. Cooldown: 40 seconds";
+		return "Hypnos - God of Sleep\n\nSkill 1: Puts all players to sleep. (Excluding yourself) Cooldown: 70 seconds\nSkill 2: Recovers your health by 8. Cooldown: 20 seconds";
 	}
 
 	public function useSkillOn(Item $item) : ?string{
 		if($item instanceof BlazeRod){
 			if($item->getNamedTagEntry(Job::SKILL1_NAME) !== null){
 				if(!$this->getRoom()->isSkillBlocked()){
-					if(!$this->hasCool(self::STRENGTH)){
-						$this->setCool(self::STRENGTH, 30);
-						foreach($this->getRoom()->getTeamPlayers($this->getPlayer()) as $player){
-							if(($target = $this->getRoom()->getServer()->getPlayerExact($player)) instanceof Player){
-								$target->addEffect(new EffectInstance(Effect::getEffect(Effect::STRENGTH), 20 * 10, 1));
-							}
+					if(!$this->hasCool(self::SLEEP)){
+						$this->setCool(self::SLEEP, 70);
+						foreach($this->getRoom()->getPlayers() as $player){
+							$player->getAttributeMap()->getAttribute(Attribute::MOVEMENT_SPEED)->setValue(0);
+							GodWar::getInstance()->getScheduler()->scheduleDelayedTask(new SleepTask($this->getRoom()), 20 * 3);
+							return "Sleep";
 						}
-						return "Strength";
 					}
 				}else{
 					$this->getPlayer()->sendMessage(GodWar::$prefix . "The skill cannot be used by Zeus.");
@@ -67,19 +65,10 @@ class Ares extends Job{
 			}
 			if($item->getNamedTagEntry(Job::SKILL2_NAME) !== null){
 				if(!$this->getRoom()->isSkillBlocked()){
-					if(!$this->hasCool(self::TRIDENT)){
-						$this->setCool(self::TRIDENT, 40);
-
-						$nbt = Entity::createBaseNBT(
-							$this->getPlayer()->add(0, $this->getPlayer()->getEyeHeight(), 0),
-							$this->getPlayer()->getDirectionVector(),
-							($this->getPlayer()->yaw > 180 ? 360 : 0) - $this->getPlayer()->yaw,
-							-$this->getPlayer()->pitch
-						);
-
-						$entity = Entity::createEntity("GodWarTrident", $this->getPlayer()->getLevel(), $nbt);
-						$entity->spawnToAll();
-						return "Trident";
+					if(!$this->hasCool(self::HEAL)){
+						$this->setCool(self::HEAL, 20);
+						$this->getPlayer()->heal(new EntityRegainHealthEvent($this->getPlayer(), EntityRegainHealthEvent::CAUSE_CUSTOM, 8));
+						return "Heal";
 					}
 				}else{
 					$this->getPlayer()->sendMessage(GodWar::$prefix . "The skill cannot be used by Zeus.");

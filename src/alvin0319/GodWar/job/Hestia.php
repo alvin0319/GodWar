@@ -24,21 +24,20 @@
  */
 
 declare(strict_types=1);
-namespace alvin0319\GodWar\event;
+namespace alvin0319\GodWar\job;
 
-use alvin0319\GodWar\Room;
-use pocketmine\event\Event;
+use pocketmine\item\Item;
 
-class GameStartEvent extends Event{
+class Hestia extends Job{
 
-	/** @var Room */
-	protected $room;
-
-	public function __construct(Room $room){
-		$this->room = $room;
+	public function getName() : string{
+		return "Hestia";
 	}
 
-	public function getRoom() : Room{
-		return $this->room;
+	public function getDescription() : string{
+		return "";
+	}
+
+	public function useSkillOn(Item $item) : ?string{
 	}
 }

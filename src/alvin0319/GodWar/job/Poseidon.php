@@ -26,40 +26,34 @@
 declare(strict_types=1);
 namespace alvin0319\GodWar\job;
 
+use alvin0319\GodWar\entity\TridentEntity;
 use alvin0319\GodWar\GodWar;
-use pocketmine\entity\Effect;
-use pocketmine\entity\EffectInstance;
 use pocketmine\entity\Entity;
 use pocketmine\item\BlazeRod;
 use pocketmine\item\Item;
-use pocketmine\Player;
 
-class Ares extends Job{
+class Poseidon extends Job{
 
-	public const STRENGTH = "strength";
+	public const DASH = "dash";
 
 	public const TRIDENT = "trident";
 
 	public function getName() : string{
-		return "Ares";
+		return "Poseidon";
 	}
 
 	public function getDescription() : string{
-		return "Ares - God of War\n\nSkill 1: Level 1 power buff on teammates. Cooldown: 30 seconds\nSkill 2: Fire a trident. The opponent who hit the trident takes 5 damage and burns for 5 seconds. Cooldown: 40 seconds";
+		return "Poseidon - God of the Sea\n\nSkill 1: Dash Forward. Cooldown: 10 seconds\nSkill 2: Fire a trident. The opponent who hit the trident will burn and take 10 damage. Cooldown: 50 seconds";
 	}
 
 	public function useSkillOn(Item $item) : ?string{
 		if($item instanceof BlazeRod){
 			if($item->getNamedTagEntry(Job::SKILL1_NAME) !== null){
 				if(!$this->getRoom()->isSkillBlocked()){
-					if(!$this->hasCool(self::STRENGTH)){
-						$this->setCool(self::STRENGTH, 30);
-						foreach($this->getRoom()->getTeamPlayers($this->getPlayer()) as $player){
-							if(($target = $this->getRoom()->getServer()->getPlayerExact($player)) instanceof Player){
-								$target->addEffect(new EffectInstance(Effect::getEffect(Effect::STRENGTH), 20 * 10, 1));
-							}
-						}
-						return "Strength";
+					if(!$this->hasCool(self::DASH)){
+						$this->setCool(self::DASH, 10);
+						$this->getPlayer()->setMotion($this->getPlayer()->getDirectionVector());
+						return "Dash";
 					}
 				}else{
 					$this->getPlayer()->sendMessage(GodWar::$prefix . "The skill cannot be used by Zeus.");
@@ -68,7 +62,7 @@ class Ares extends Job{
 			if($item->getNamedTagEntry(Job::SKILL2_NAME) !== null){
 				if(!$this->getRoom()->isSkillBlocked()){
 					if(!$this->hasCool(self::TRIDENT)){
-						$this->setCool(self::TRIDENT, 40);
+						$this->setCool(self::TRIDENT, 50);
 
 						$nbt = Entity::createBaseNBT(
 							$this->getPlayer()->add(0, $this->getPlayer()->getEyeHeight(), 0),
@@ -77,7 +71,9 @@ class Ares extends Job{
 							-$this->getPlayer()->pitch
 						);
 
+						/** @var TridentEntity $entity */
 						$entity = Entity::createEntity("GodWarTrident", $this->getPlayer()->getLevel(), $nbt);
+						$entity->setCritical(true);
 						$entity->spawnToAll();
 						return "Trident";
 					}

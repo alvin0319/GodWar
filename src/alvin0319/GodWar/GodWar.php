@@ -1,10 +1,40 @@
 <?php
+
+/*
+ *    ___          _ __    __
+ *   / _ \___   __| / / /\ \ \__ _ _ __
+ *  / /_\/ _ \ / _` \ \/  \/ / _` | '__|
+ * / /_\\ (_) | (_| |\  /\  / (_| | |
+ * \____/\___/ \__,_| \/  \/ \__,_|_|
+ *
+ * Copyright (C) 2020 alvin0319
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 declare(strict_types=1);
 namespace alvin0319\GodWar;
 
+use alvin0319\GodWar\entity\Fireball;
+use alvin0319\GodWar\entity\TridentEntity;
+use alvin0319\GodWar\task\GameTickTask;
 use InvalidStateException;
+use pocketmine\entity\Entity;
+use pocketmine\item\Item;
 use pocketmine\level\Level;
 use pocketmine\level\Position;
+use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use ZipArchive;
@@ -64,6 +94,7 @@ class GodWar extends PluginBase{
 		if(($this->getConfig()->getNested("red-spawn", "0:0:0:world") === "0:0:0:world") or ($this->getConfig()->getNested("blue-spawn", "0:0:0:world"))){
 			$this->getLogger()->critical("You need to set up red-spawn and blue-spawn in config.yml.");
 			$this->getServer()->getPluginManager()->disablePlugin($this);
+			return;
 		}
 
 		[$redX, $redY, $redZ, $worldName] = explode(":", $this->getConfig()->getNested("red-spawn"));
@@ -77,9 +108,15 @@ class GodWar extends PluginBase{
 
 		$this->invConfig = new Config($this->getDataFolder() . "Inventories.yml", Config::YAML);
 		$this->db = $this->invConfig->getAll();
+
+		Entity::registerEntity(TridentEntity::class, true, ["GodWarTrident"]);
+		Entity::registerEntity(Fireball::class, true, ["GodWarFireball"]);
+
+		$this->getScheduler()->scheduleRepeatingTask(new GameTickTask(), 20);
+		$this->getServer()->getPluginManager()->registerEvents(new EventListener(), $this);
 	}
 
-	public function loadMap(string $file, int $mapId) : bool{
+	public function loadMap(int $mapId) : bool{
 		$zip = new ZipArchive();
 		if($zip->open($this->getDataFolder() . $this->getConfig()->getNested("world-zip")) === true){
 			$zip->extractTo("godwar_{$mapId}");
@@ -88,7 +125,7 @@ class GodWar extends PluginBase{
 		return false;
 	}
 
-	public function recursiveRmdir(string $dir) : void{
+	public function recursiveRmdirWorld(string $dir) : void{
 		if(($world = $this->getServer()->getLevelByName($dir)) instanceof Level){
 			$this->getServer()->unloadLevel($world);
 		}
@@ -99,7 +136,7 @@ class GodWar extends PluginBase{
 				if(is_file($realPath)){
 					unlink($realPath);
 				}elseif(is_dir($realPath)){
-					$this->recursiveRmdir($realPath);
+					$this->recursiveRmdirWorld($realPath);
 					rmdir($realPath);
 				}
 			}
@@ -111,5 +148,52 @@ class GodWar extends PluginBase{
 		foreach(array_values($this->rooms) as $room){
 			$room->syncTick();
 		}
+	}
+
+	public function getRoomForPlayer(Player $player) : ?Room{
+		foreach($this->getRooms() as $room){
+			if($room->isPlayer($player))
+				return $room;
+		}
+		return null;
+	}
+
+	public function getRoom(int $id) : ?Room{
+		return $this->rooms[$id] ?? null;
+	}
+
+	/**
+	 * @return Room[]
+	 */
+	public function getRooms() : array{
+		return array_values($this->rooms);
+	}
+
+	public function saveInventory(Player $player) : void{
+		$this->db[$player->getName()] = [
+			"inv" => [],
+			"armorinv" => []
+		];
+		foreach($player->getInventory()->getContents(false) as $slot => $item){
+			$this->db[$player->getName()]["inv"][$slot] = $item->jsonSerialize();
+		}
+		foreach($player->getArmorInventory()->getContents(false) as $slot => $item){
+			$this->db[$player->getName()]["armorinv"][$slot] = $item->jsonSerialize();
+		}
+		$player->getInventory()->clearAll();
+		$player->getArmorInventory()->clearAll();
+	}
+
+	public function restoreInventory(Player $player) : void{
+		$player->getInventory()->clearAll();
+		$player->getArmorInventory()->clearAll();
+
+		foreach($this->db[$player->getName()]["inv"] as $slot => $itemData){
+			$player->getInventory()->setItem($slot, Item::jsonDeserialize($itemData));
+		}
+		foreach($this->db[$player->getName()]["armorinv"] as $slot => $itemData){
+			$player->getArmorInventory()->setItem($slot, Item::jsonDeserialize($itemData));
+		}
+		unset($this->db[$player->getName()]);
 	}
 }

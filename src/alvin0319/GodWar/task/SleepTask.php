@@ -24,21 +24,23 @@
  */
 
 declare(strict_types=1);
-namespace alvin0319\GodWar\event;
+namespace alvin0319\GodWar\task;
 
 use alvin0319\GodWar\Room;
-use pocketmine\event\Event;
+use pocketmine\entity\Attribute;
+use pocketmine\scheduler\Task;
 
-class GameStartEvent extends Event{
+class SleepTask extends Task{
 
-	/** @var Room */
 	protected $room;
 
 	public function __construct(Room $room){
 		$this->room = $room;
 	}
 
-	public function getRoom() : Room{
-		return $this->room;
+	public function onRun(int $unused) : void{
+		foreach($this->room->getPlayers() as $player){
+			$player->getAttributeMap()->getAttribute(Attribute::MOVEMENT_SPEED)->setValue($player->getAttributeMap()->getAttribute(Attribute::MOVEMENT_SPEED)->getDefaultValue());
+		}
 	}
 }
