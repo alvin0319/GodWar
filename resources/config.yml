@@ -1,0 +1,12 @@
+# default is null, you need to replace here.
+world-zip: ~
+
+# It is time for the game to progress, default: 2000 (seconds)
+time: 2000
+
+
+# The number of rooms to be created.
+room: 2
+
+red-spawn: "0:0:0:world"
+blue-spawn: "0:0:0:world"
