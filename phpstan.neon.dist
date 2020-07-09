@@ -1,5 +1,4 @@
 parameters:
-  ignoreErrors:
-    -
-      message: "Reflection error: pocketmine\event\Listener not found."
-      path: src/alvin0319/GodWar/GodWar.php
+  level: 8
+  paths:
+    - src
