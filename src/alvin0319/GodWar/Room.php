@@ -252,7 +252,7 @@ class Room{
 	public function syncTick() : void{
 		$this->sendProgressBar();
 		if(!$this->isRunning()){
-			if(count($this->players) === 2){
+			if(count($this->players) >= 4){
 				--$this->waitTime;
 				if($this->waitTime === 0){
 					$this->start();
@@ -288,11 +288,12 @@ class Room{
 						foreach($cools as $cool){
 							$text .= $cool . "\n";
 						}
+						$text .= "\n";
 					}
 					$player->sendPopup($text);
 				}else{
 					$text .= "Waiting for more players...\n";
-					$text .= "Time left: " . $this->convertTimeToString($this->waitTime);
+					$text .= "Time left: " . $this->convertTimeToString($this->waitTime) . "\n";
 					$player->sendPopup($text);
 				}
 			}
