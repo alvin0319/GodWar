@@ -36,7 +36,7 @@ And you need to put the world zipped file in path/to/plugin_data/GodWar/your_zip
 >>
 >> Skill 2: Ignite opponents within 10 squares.
 >
-> Hestia:
+> Athena:
 >> Skill 1: TODO
 >>
 >> Skill 2: TODO

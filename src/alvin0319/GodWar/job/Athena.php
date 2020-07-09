@@ -28,10 +28,10 @@ namespace alvin0319\GodWar\job;
 
 use pocketmine\item\Item;
 
-class Hestia extends Job{
+class Athena extends Job{
 
 	public function getName() : string{
-		return "Hestia";
+		return "Athena";
 	}
 
 	public function getDescription() : string{

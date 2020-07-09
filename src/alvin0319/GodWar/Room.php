@@ -30,7 +30,7 @@ use alvin0319\GodWar\event\GameEndEvent;
 use alvin0319\GodWar\event\GameStartEvent;
 use alvin0319\GodWar\job\Ares;
 use alvin0319\GodWar\job\Helios;
-use alvin0319\GodWar\job\Hestia;
+use alvin0319\GodWar\job\Athena;
 use alvin0319\GodWar\job\Hypnos;
 use alvin0319\GodWar\job\Job;
 use alvin0319\GodWar\job\Poseidon;
