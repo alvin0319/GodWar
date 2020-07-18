@@ -43,7 +43,7 @@ abstract class Job{
 	/** @var Room */
 	protected $room;
 
-	/** @var int[] */
+	/** @var int[][] */
 	protected $coolTimes = [];
 
 	public function __construct(Player $player, Room $room){

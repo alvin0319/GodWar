@@ -31,6 +31,7 @@ use pocketmine\entity\Living;
 use pocketmine\entity\projectile\Projectile;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\entity\ProjectileHitEntityEvent;
 use pocketmine\event\entity\ProjectileHitEvent;
 use pocketmine\Player;
 
@@ -48,13 +49,15 @@ class TridentEntity extends Projectile{
 	}
 
 	public function onHit(ProjectileHitEvent $event) : void{
-		$player = $event->getEntity();
 		$this->flagForDespawn();
-		$player->setOnFire(5);
-		$player->attack(new EntityDamageByEntityEvent($this, $player, EntityDamageEvent::CAUSE_PROJECTILE, ($this->critical ? 10 : 5)));
-		if($this->critical){
-			if($player instanceof Living){
-				$player->knockBack($this, 0, $this->x - $player->x, $this->z - $player->z);
+		if($event instanceof ProjectileHitEntityEvent){
+			$player = $event->getEntityHit();
+			$player->setOnFire(5);
+			$player->attack(new EntityDamageByEntityEvent($this, $player, EntityDamageEvent::CAUSE_PROJECTILE, ($this->critical ? 10 : 5)));
+			if($this->critical){
+				if($player instanceof Living){
+					$player->knockBack($this, 0, $this->x - $player->x, $this->z - $player->z);
+				}
 			}
 		}
 	}
