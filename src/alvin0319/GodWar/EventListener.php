@@ -35,6 +35,7 @@ use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerChatEvent;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerJoinEvent;
+use pocketmine\event\player\PlayerKickEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\event\server\DataPacketSendEvent;
@@ -258,6 +259,17 @@ class EventListener implements Listener{
 							break;
 					}
 				}));
+			}
+		}
+	}
+
+	public function onPlayerKick(PlayerKickEvent $event) : void{
+		$player = $event->getPlayer();
+		if(($room = GodWar::getInstance()->getRoomForPlayer($player)) instanceof Room){
+			if($room->isRunning()){
+				if($event->getReason() === $room->getServer()->getLanguage()->translateString("kick.reason.cheat", ["%ability.flight"])){
+					$event->setCancelled();
+				}
 			}
 		}
 	}
