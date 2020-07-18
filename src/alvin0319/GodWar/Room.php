@@ -325,6 +325,10 @@ class Room{
 		}
 	}
 
+	/**
+	 * @param Player $player
+	 * @return string[]
+	 */
 	public function getTeamPlayers(Player $player) : array{
 		switch($this->players[$player->getName()]){
 			case self::TEAM_RED:

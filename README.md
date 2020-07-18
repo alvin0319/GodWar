@@ -60,3 +60,51 @@ And you need to put the world zipped file in path/to/plugin_data/GodWar/your_zip
 
 # Rule
 If you break the opponent's core block (diamond), you win. However, you must break it with your hands.
+
+# API
+
+`\alvin0319\GodWar\event\GameStartEvent`: Called when game is started.
+
+```php
+public function onGameStart(\alvin0319\GodWar\event\GameStartEvent $event) : void{
+    $room = $event->getRoom();
+    // code...
+}
+```
+
+
+`\alvin0319\GodWar\event\GameEndEvent`: Called when game is ended.
+
+```php
+public function onGameEnd(\alvin0319\GodWar\event\GameEndEvent $event) : void{
+    $result = $event->getResult();
+    $winner = $result->getWinner(); // red or blue or null (null is draw)
+    $room = $result->getRoom();
+    // code...
+}
+```
+`\alvin0319\GodWar\Room`: The room
+
+```php
+/**
+ * @var \alvin0319\GodWar\Room $room
+ * @var \pocketmine\Player $player
+*/
+$room->addPlayer($player); // add player
+$room->removePlayer($player); // remove player
+
+$room->end("blue or red or null"); // end the game
+
+$room->getPlayers(); // return players
+
+$room->getBlueTeam(); // return blue players' job
+$room->getRedTeam(); // return red players' job
+
+$room->getTeamFor($player); // get team (red or blue)
+
+$room->getTeamPlayers($player); // get players of team
+
+$room->getJob($player); // get job
+
+$room->getId(); // get id
+```
