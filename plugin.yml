@@ -1,7 +1,7 @@
 name: GodWar
 author: alvin0319
 main: alvin0319\GodWar\GodWar
-version: 0.0.5
+version: 1.0.0
 api: 3.0.0
 
 mcpe-protocol: 407
