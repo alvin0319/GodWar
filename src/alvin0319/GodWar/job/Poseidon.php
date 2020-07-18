@@ -52,7 +52,7 @@ class Poseidon extends Job{
 				if(!$this->getRoom()->isSkillBlocked()){
 					if(!$this->hasCool(self::DASH)){
 						$this->setCool(self::DASH, 10);
-						$this->getPlayer()->setMotion($this->getPlayer()->getDirectionVector());
+						$this->getPlayer()->setMotion($this->getPlayer()->getDirectionVector()->multiply(1.2));
 						return "Dash";
 					}
 				}else{

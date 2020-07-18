@@ -30,7 +30,6 @@ use alvin0319\GodWar\command\GodWarCommand;
 use alvin0319\GodWar\entity\Fireball;
 use alvin0319\GodWar\entity\TridentEntity;
 use alvin0319\GodWar\task\GameTickTask;
-use InvalidStateException;
 use pocketmine\entity\Entity;
 use pocketmine\item\Item;
 use pocketmine\level\Position;
@@ -44,6 +43,7 @@ use function count;
 use function explode;
 use function file_exists;
 use function floatval;
+use function implode;
 use function intval;
 use function is_dir;
 use function is_file;
@@ -71,9 +71,6 @@ class GodWar extends PluginBase{
 	protected $roomIds = 0;
 
 	public function onLoad() : void{
-		if(self::$instance instanceof GodWar){
-			throw new InvalidStateException("");
-		}
 		self::$instance = $this;
 	}
 
@@ -100,16 +97,27 @@ class GodWar extends PluginBase{
 			$this->getLogger()->critical("You need to set up red-spawn and blue-spawn in config.yml.");
 			$this->getServer()->getPluginManager()->disablePlugin($this);
 			return;
+		}else{
+			[$redX, $redY, $redZ, $worldName] = explode(":", $this->getConfig()->getNested("red-spawn"));
+			[$blueX, $blueY, $blueZ, $_] = explode(":", $this->getConfig()->getNested("blue-spawn"));
+
+			$minCount = $this->getConfig()->get("min-count", 2);
+			$maxCount = $this->getConfig()->get("max-count", 8);
+
+			if($maxCount < $minCount){
+				$this->getLogger()->critical("Max count MUST be larger than Min count");
+				$this->getServer()->getPluginManager()->disablePlugin($this);
+				return;
+			}
+
+			for($i = 0; $i < $this->roomIds = intval($this->getConfig()->getNested("room", 2)); $i++){
+				$this->loadMap($i);
+				$world = $this->getServer()->getLevelByName("godwar_{$i}");
+				$this->rooms[$i] = new Room($i, $this->getConfig()->getNested("time", 2000), new Position(floatval($redX), floatval($redY), floatval($redZ), $world), new Position(intval($blueX), intval($blueY), intval($blueZ), $world), "godwar_{$i}", $minCount, $maxCount);
+			}
+			$this->getScheduler()->scheduleRepeatingTask(new GameTickTask(), 20);
 		}
 
-		[$redX, $redY, $redZ, $worldName] = explode(":", $this->getConfig()->getNested("red-spawn"));
-		[$blueX, $blueY, $blueZ, $_] = explode(":", $this->getConfig()->getNested("blue-spawn"));
-
-		for($i = 0; $i < $this->roomIds = intval($this->getConfig()->getNested("room", 2)); $i++){
-			$this->loadMap($i);
-			$world = $this->getServer()->getLevelByName("godwar_{$i}");
-			$this->rooms[$i] = new Room($i, $this->getConfig()->getNested("time", 2000), new Position(floatval($redX), floatval($redY), floatval($redZ), $world), new Position(intval($blueX), intval($blueY), intval($blueZ), $world), "godwar_{$i}");
-		}
 
 		$this->invConfig = new Config($this->getDataFolder() . "Inventories.yml", Config::YAML);
 		$this->db = $this->invConfig->getAll();
@@ -117,15 +125,21 @@ class GodWar extends PluginBase{
 		Entity::registerEntity(TridentEntity::class, true, ["GodWarTrident"]);
 		Entity::registerEntity(Fireball::class, true, ["GodWarFireball"]);
 
-		$this->getScheduler()->scheduleRepeatingTask(new GameTickTask(), 20);
 		$this->getServer()->getPluginManager()->registerEvents(new EventListener(), $this);
 
 		$this->getServer()->getCommandMap()->register("godwar", new GodWarCommand());
 	}
 
 	public function onDisable() : void{
+		foreach($this->getRooms() as $room) {
+			if($room->isRunning()){
+				$room->end(null);
+			}
+		}
 		$this->invConfig->setAll($this->db);
 		$this->invConfig->save();
+
+		$this->getConfig()->save();
 	}
 
 	public function loadMap(int $mapId) : bool{
@@ -136,6 +150,14 @@ class GodWar extends PluginBase{
 			return $zip->close();
 		}
 		return false;
+	}
+
+	public function setRedSpawn(Position $pos) : void{
+		$this->getConfig()->set("red-spawn", implode(":", [$pos->getFloorX(), $pos->getFloorY(), $pos->getFloorZ(), $pos->getLevel()->getFolderName()]));
+	}
+
+	public function setBlueSpawn(Position $pos) : void{
+		$this->getConfig()->set("blue-spawn", implode(":", [$pos->getFloorX(), $pos->getFloorY(), $pos->getFloorZ(), $pos->getLevel()->getFolderName()]));
 	}
 
 	public function recursiveRmdirWorld(string $dir) : void{
@@ -170,6 +192,29 @@ class GodWar extends PluginBase{
 				$this->recursiveRmdirWorld($dir);
 			}
 		}
+	}
+
+	public function setUpRoom() : void{
+		[$redX, $redY, $redZ, $_] = explode(":", $this->getConfig()->getNested("red-spawn"));
+		[$blueX, $blueY, $blueZ, $_] = explode(":", $this->getConfig()->getNested("blue-spawn"));
+
+		$minCount = $this->getConfig()->get("min-count", 2);
+		$maxCount = $this->getConfig()->get("max-count", 8);
+
+		if($maxCount < $minCount){
+			return;
+		}
+
+		for($i = 0; $i < $this->roomIds = intval($this->getConfig()->getNested("room", 2)); $i++){
+			$this->loadMap($i);
+			$world = $this->getServer()->getLevelByName("godwar_{$i}");
+			$this->rooms[$i] = new Room($i, $this->getConfig()->getNested("time", 2000), new Position(floatval($redX), floatval($redY), floatval($redZ), $world), new Position(intval($blueX), intval($blueY), intval($blueZ), $world), "godwar_{$i}", $minCount, $maxCount);
+		}
+		$this->getScheduler()->scheduleRepeatingTask(new GameTickTask(), 20);
+	}
+
+	public function canStart() : bool{
+		return ($this->getConfig()->getNested("red-spawn", "0:0:0:world") !== "0:0:0:world") and ($this->getConfig()->getNested("blue-spawn", "0:0:0:world") !== "0:0:0:world") && count($this->rooms) === 0;
 	}
 
 	public function syncGameTick() : void{
@@ -224,6 +269,8 @@ class GodWar extends PluginBase{
 				$player->getArmorInventory()->setItem($slot, Item::jsonDeserialize($itemData));
 			}
 			unset($this->db[$player->getName()]);
+
+			$player->teleport(GodWar::getInstance()->getServer()->getDefaultLevel()->getSafeSpawn());
 		}
 	}
 

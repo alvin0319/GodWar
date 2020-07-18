@@ -29,8 +29,8 @@ namespace alvin0319\GodWar;
 use alvin0319\GodWar\event\GameEndEvent;
 use alvin0319\GodWar\event\GameStartEvent;
 use alvin0319\GodWar\job\Ares;
+use alvin0319\GodWar\job\Gaia;
 use alvin0319\GodWar\job\Helios;
-use alvin0319\GodWar\job\Athena;
 use alvin0319\GodWar\job\Hypnos;
 use alvin0319\GodWar\job\Job;
 use alvin0319\GodWar\job\Poseidon;
@@ -38,6 +38,7 @@ use alvin0319\GodWar\job\Zeus;
 use alvin0319\GodWar\result\GameResult;
 use pocketmine\level\Position;
 use pocketmine\Player;
+use pocketmine\scheduler\ClosureTask;
 use pocketmine\Server;
 use function array_filter;
 use function array_keys;
@@ -85,17 +86,23 @@ class Room{
 
 	protected $waitTime = 60;
 
+	protected $minCount = 2;
+
+	protected $maxCount = 8;
+
 	/** @var Server */
 	private $server;
 
 	protected $skillBlocked = false;
 
-	public function __construct(int $id, int $timeLeft, Position $redSpawn, Position $blueSpawn, string $worldName){
+	public function __construct(int $id, int $timeLeft, Position $redSpawn, Position $blueSpawn, string $worldName, int $minCount, int $maxCount){
 		$this->id = $id;
 		$this->timeLeft = $timeLeft;
 		$this->redSpawn = $redSpawn;
 		$this->blueSpawn = $blueSpawn;
 		$this->worldName = $worldName;
+		$this->minCount = $minCount;
+		$this->maxCount = $maxCount;
 		$this->setUp();
 		$this->server = Server::getInstance();
 	}
@@ -145,20 +152,20 @@ class Room{
 			return false;
 		if($this->isPlayer($player))
 			return false;
-		if(count($this->players) >= 6)
+		if(count($this->players) >= $this->maxCount)
 			return false;
 		return true;
 	}
 
 	public function addPlayer(Player $player) : void{
 		if($this->canJoin($player)){
-			$this->broadcastMessage("{$player->getName()} has left the game");
+			$this->broadcastMessage("{$player->getName()} has joined the game");
 			$this->players[$player->getName()] = "none";
 		}
 	}
 
 	public function removePlayer(Player $player) : void{
-		$this->broadcastMessage("{$player->getName()} has joined the game.");
+		$this->broadcastMessage("{$player->getName()} has left the game.");
 		if(isset($this->players[$player->getName()])){
 			$redOrBlue = $this->players[$player->getName()];
 			switch($redOrBlue){
@@ -172,6 +179,12 @@ class Room{
 					break;
 			}
 		}
+		$this->checkEnd();
+	}
+
+	public function checkEnd() : void{
+		if(count($this->redTeam) === 0 or count($this->blueTeam) === 0 or count($this->players) === 0)
+			$this->end(null);
 	}
 
 	public function isSameTeam(Player $player, Player $target) : bool{
@@ -185,7 +198,7 @@ class Room{
 			new Helios($player, $this),
 			new Poseidon($player, $this),
 			new Hypnos($player, $this),
-			//new Hestia($player, $this)
+			new Gaia($player, $this)
 		];
 		return $jobs[array_rand($jobs)];
 	}
@@ -208,6 +221,18 @@ class Room{
 				return false;
 			default:
 				return false;
+		}
+	}
+
+	public function setJob(Player $player, Job $job) : void{
+		$team = $this->getTeamFor($player);
+		switch($team){
+			case self::TEAM_RED:
+				$this->redTeam[$player->getName()] = $job;
+				break;
+			case self::TEAM_BLUE:
+				$this->blueTeam[$player->getName()] = $job;
+				break;
 		}
 	}
 
@@ -252,7 +277,7 @@ class Room{
 	public function syncTick() : void{
 		$this->sendProgressBar();
 		if(!$this->isRunning()){
-			if(count($this->players) >= 4){
+			if(count($this->players) >= $this->minCount){
 				--$this->waitTime;
 				if($this->waitTime === 0){
 					$this->start();
@@ -284,7 +309,7 @@ class Room{
 						}
 					}
 					if(count($cools) > 0){
-						$text .= "§a---- §fCooldown list §a----§f\n";
+						$text .= "\n§a---- §fCooldown list §a----§f\n";
 						foreach($cools as $cool){
 							$text .= $cool . "\n";
 						}
@@ -327,6 +352,9 @@ class Room{
 
 	public function blockAllSkills() : void{
 		$this->skillBlocked = true;
+		GodWar::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function(int $unused) : void{
+			$this->skillBlocked = false;
+		}), 60);
 	}
 
 	public function isSkillBlocked() : bool{

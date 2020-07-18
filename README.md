@@ -5,6 +5,7 @@ A Minigame plugin for PocketMine-MP: GodWar
 `config.yml`
 ```yaml
 # default is null, you need to replace here.
+# ex) world-zip: world.zip
 world-zip: ~
 
 # It is time for the game to progress, default: 2000 (seconds)
@@ -13,6 +14,11 @@ time: 2000
 
 # The number of rooms to be created.
 room: 2
+
+# The number of min player count.
+min-count: 4
+# The number of max player count, MUST larger than min count.
+max-count: 8
 
 red-spawn: "0:0:0:world"
 blue-spawn: "0:0:0:world"
@@ -36,10 +42,10 @@ And you need to put the world zipped file in path/to/plugin_data/GodWar/your_zip
 >>
 >> Skill 2: Ignite opponents within 10 squares.
 >
-> Athena:
->> Skill 1: TODO
+> Gaia:
+>> Skill 1: Bind opponents within 6 squares of me to the floor.
 >>
->> Skill 2: TODO
+>> Skill 2: Gain 2 protection for 5 seconds.
 >
 > Poseidon:
 >> Skill 1: Dash Forward.

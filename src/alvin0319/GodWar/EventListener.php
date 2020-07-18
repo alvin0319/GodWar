@@ -36,13 +36,18 @@ use pocketmine\event\player\PlayerChatEvent;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerQuitEvent;
+use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\item\Item;
 use pocketmine\item\ItemFactory;
 use pocketmine\item\ItemIds;
 use pocketmine\nbt\tag\StringTag;
+use pocketmine\network\mcpe\protocol\AvailableCommandsPacket;
 use pocketmine\network\mcpe\protocol\ContainerOpenPacket;
+use pocketmine\network\mcpe\protocol\types\CommandEnum;
+use pocketmine\network\mcpe\protocol\types\CommandParameter;
 use pocketmine\Player;
+use pocketmine\scheduler\ClosureTask;
 use function array_rand;
 use function in_array;
 use function is_string;
@@ -109,6 +114,27 @@ class EventListener implements Listener{
 				}
 			}
 		}
+		if($packet instanceof AvailableCommandsPacket){
+			if(isset($packet->commandData["god"]) && $player->hasPermission("godwar.command")){
+				$data = $packet->commandData["god"];
+
+				$parameter = new CommandParameter();
+				$parameter->paramName = "args";
+				$parameter->paramType = AvailableCommandsPacket::ARG_FLAG_VALID | AvailableCommandsPacket::ARG_TYPE_STRING;
+				$parameter->isOptional = true;
+				$parameter->enum = new CommandEnum();
+				$parameter->enum->enumName = "value";
+				$parameter->enum->enumValues = [
+					"trident",
+					"fireball",
+					"setred",
+					"setblue",
+					"stopall"
+				];
+				$data->overloads = [[$parameter]];
+				$packet->commandData["god"] = $data;
+			}
+		}
 	}
 
 	public function onPlayerChat(PlayerChatEvent $event) : void{
@@ -118,10 +144,10 @@ class EventListener implements Listener{
 			if($room->isRunning()){
 				if(trim(substr($event->getMessage(), 0, 1)) === "!"){
 					if($event->getMessage() === "!help"){
-						$player->sendMessage(GodWar::$prefix . "!help - Help of the gods war.");
+						$player->sendMessage(GodWar::$prefix . "!help - Help of the GodWar.");
 						$player->sendMessage(GodWar::$prefix . "!job - Info of your job.");
 						$player->sendMessage(GodWar::$prefix . "!betting - Do a betting.");
-						$player->sendMessage(GodWar::$prefix . "Team chat is possible with \"!message\".");
+						$player->sendMessage(GodWar::$prefix . "Team chat is possible with \"!(message)\".");
 					}elseif($event->getMessage() === "!job"){
 						$job = $room->getJob($player);
 						$player->sendMessage(GodWar::$prefix . "You are " . $job->getName() . ".");
@@ -135,6 +161,9 @@ class EventListener implements Listener{
 						}else{
 							$player->sendMessage(GodWar::$prefix . "You don't have enough cobblestones to gamble. (32 required)");
 						}
+					}elseif($event->getMessage() === "!chjob"){
+						$room->setJob($player, $room->chooseJobFor($player));
+						$player->sendMessage("Job: " . $room->getJob($player)->getName());
 					}else{
 						foreach($room->getTeamPlayers($player) as $name){
 							if(($m = $room->getServer()->getPlayerExact($name)) instanceof Player){
@@ -211,6 +240,24 @@ class EventListener implements Listener{
 				if(is_string($message = $job->useSkillOn($event->getItem()))){
 					$room->broadcastMessage("{$player->getName()} used [ §a{$message} §7] skill!");
 				}
+			}
+		}
+	}
+
+	public function onPlayerRespawn(PlayerRespawnEvent $event) : void{
+		$player = $event->getPlayer();
+		if(($room = GodWar::getInstance()->getRoomForPlayer($player)) instanceof Room){
+			if($room->isRunning()){
+				GodWar::getInstance()->getScheduler()->scheduleTask(new ClosureTask(function(int $unused) use ($player, $room) : void{
+					switch($room->getTeamFor($player)){
+						case Room::TEAM_RED:
+							$player->teleport($room->getRedSpawn());
+							break;
+						case Room::TEAM_BLUE:
+							$player->teleport($room->getBlueSpawn());
+							break;
+					}
+				}));
 			}
 		}
 	}

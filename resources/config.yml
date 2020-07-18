@@ -8,5 +8,10 @@ time: 2000
 # The number of rooms to be created.
 room: 2
 
+# The number of min player count.
+min-count: 4
+# The number of max player count, MUST larger than min count.
+max-count: 8
+
 red-spawn: "0:0:0:world"
 blue-spawn: "0:0:0:world"

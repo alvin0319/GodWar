@@ -43,7 +43,7 @@ class GodWarCommand extends PluginCommand{
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args) : bool{
 		if($sender instanceof Player){
-			if(!$sender->isOp()){
+			if(!$sender->hasPermission("godwar.command")){
 				$sender->sendForm(new GodWarMainForm());
 			}else{
 				if(trim($args[0] ?? "") !== ""){
@@ -71,6 +71,20 @@ class GodWarCommand extends PluginCommand{
 							$entity = Entity::createEntity("GodWarTrident", $sender->getLevel(), $nbt);
 							$entity->spawnToAll();
 							// trident
+							break;
+						case "stopall":
+							foreach(GodWar::getInstance()->getRooms() as $room){
+								if($room->isRunning())
+									$room->end(null);
+							}
+							break;
+						case "setred":
+							GodWar::getInstance()->setRedSpawn($sender);
+							$sender->sendMessage(GodWar::$prefix . "Succeed.");
+							break;
+						case "setblue":
+							GodWar::getInstance()->setBlueSpawn($sender);
+							$sender->sendMessage(GodWar::$prefix . "Succeed.");
 							break;
 						default:
 							$sender->sendForm(new GodWarMainForm());

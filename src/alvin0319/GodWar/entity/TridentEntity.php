@@ -26,15 +26,12 @@
 declare(strict_types=1);
 namespace alvin0319\GodWar\entity;
 
-use pocketmine\block\Block;
-use pocketmine\entity\Entity;
 use pocketmine\entity\EntityIds;
 use pocketmine\entity\Living;
 use pocketmine\entity\projectile\Projectile;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\ProjectileHitEvent;
-use pocketmine\math\RayTraceResult;
 use pocketmine\Player;
 
 class TridentEntity extends Projectile{
@@ -64,13 +61,5 @@ class TridentEntity extends Projectile{
 
 	public function setCritical(bool $v) : void{
 		$this->critical = $v;
-	}
-
-	public function onHitBlock(Block $blockHit, RayTraceResult $hitResult) : void{
-
-	}
-
-	public function onHitEntity(Entity $entityHit, RayTraceResult $hitResult) : void{
-
 	}
 }

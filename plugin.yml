@@ -5,3 +5,11 @@ version: 0.0.5
 api: 3.0.0
 
 mcpe-protocol: 407
+
+permissions:
+  godwar.*:
+    description: GodWar permission
+    children:
+      godwar.command:
+        description: GodWar command permission
+        default: op
