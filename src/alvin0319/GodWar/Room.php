@@ -103,7 +103,7 @@ class Room{
 		$this->worldName = $worldName;
 		$this->minCount = $minCount;
 		$this->maxCount = $maxCount;
-		$this->setUp();
+		$this->setUp(true);
 		$this->server = Server::getInstance();
 	}
 
@@ -123,7 +123,7 @@ class Room{
 		return $this->blueSpawn;
 	}
 
-	public function setUp() : void{
+	public function setUp(bool $start = false) : void{
 		$this->progress = $this->timeLeft;
 		$this->players = [];
 		$this->redTeam = [];
@@ -131,8 +131,17 @@ class Room{
 		$this->running = false;
 		$this->waitTime = 60;
 
-		GodWar::getInstance()->recursiveRmdirWorld($this->worldName);
-		GodWar::getInstance()->loadMap($this->id);
+		if(!$start){
+			GodWar::getInstance()->getScheduler()->scheduleTask(new ClosureTask(function(int $unused) : void{
+				$this->server->unloadLevel($this->getServer()->getLevelByName($this->worldName), true);
+				GodWar::getInstance()->getLogger()->debug("Removing old world...");
+				GodWar::getInstance()->recursiveRmdirWorld($this->worldName);
+				GodWar::getInstance()->getLogger()->debug("Loading new world...");
+				GodWar::getInstance()->loadMap($this->id);
+				$this->server->loadLevel($this->worldName);
+				GodWar::getInstance()->getLogger()->debug("Done!");
+			}));
+		}
 	}
 
 	public function isRunning() : bool{
@@ -183,7 +192,7 @@ class Room{
 	}
 
 	public function checkEnd() : void{
-		if(count($this->redTeam) === 0 or count($this->blueTeam) === 0 or count($this->players) === 0)
+		if(count($this->redTeam) === 0 or count($this->blueTeam) === 0 or count($this->players) === 0 && $this->running)
 			$this->end(null);
 	}
 
