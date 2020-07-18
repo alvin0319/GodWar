@@ -162,9 +162,6 @@ class EventListener implements Listener{
 						}else{
 							$player->sendMessage(GodWar::$prefix . "You don't have enough cobblestones to gamble. (32 required)");
 						}
-					}elseif($event->getMessage() === "!chjob"){
-						$room->setJob($player, $room->chooseJobFor($player));
-						$player->sendMessage("Job: " . $room->getJob($player)->getName());
 					}else{
 						foreach($room->getTeamPlayers($player) as $name){
 							if(($m = $room->getServer()->getPlayerExact($name)) instanceof Player){
