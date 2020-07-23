@@ -1,5 +1,5 @@
-# default is null, you need to replace here.
-world-zip: ~
+# default is plugin's world, you need to replace here if you want to change world.
+world-zip: world.zip
 
 # It is time for the game to progress, default: 2000 (seconds)
 time: 2000
@@ -13,5 +13,5 @@ min-count: 4
 # The number of max player count, MUST larger than min count.
 max-count: 8
 
-red-spawn: "0:0:0:world"
-blue-spawn: "0:0:0:world"
+red-spawn: "504:62:115:godwar_0"
+blue-spawn: "504:62:-105:godwar_0"

@@ -80,6 +80,7 @@ class GodWar extends PluginBase{
 
 	public function onEnable() : void{
 		$this->saveDefaultConfig();
+		$this->saveResource("world.zip");
 
 		if(is_null($this->getConfig()->getNested("world-zip", null))){
 			$this->getLogger()->critical("You need to set up config.yml!");
@@ -94,9 +95,7 @@ class GodWar extends PluginBase{
 		}
 
 		if(($this->getConfig()->getNested("red-spawn", "0:0:0:world") === "0:0:0:world") or ($this->getConfig()->getNested("blue-spawn", "0:0:0:world") === "0:0:0:world")){
-			$this->getLogger()->critical("You need to set up red-spawn and blue-spawn in config.yml.");
-			$this->getServer()->getPluginManager()->disablePlugin($this);
-			return;
+			$this->getLogger()->critical("You need to set up red-spawn and blue-spawn in config.yml, or use /god [setred|setblue]");
 		}else{
 			[$redX, $redY, $redZ, $worldName] = explode(":", $this->getConfig()->getNested("red-spawn"));
 			[$blueX, $blueY, $blueZ, $_] = explode(":", $this->getConfig()->getNested("blue-spawn"));
@@ -165,7 +164,8 @@ class GodWar extends PluginBase{
 			if(substr($dir, -1) !== "/"){
 				$dir .= "/";
 			}
-			foreach(scandir($dir) as $file){
+			$dirs = scandir($dir);
+			foreach($dirs as $file){
 				if($file !== "." and $file !== ".."){
 					$realPath = $dir . $file;
 
@@ -215,6 +215,11 @@ class GodWar extends PluginBase{
 
 	public function canStart() : bool{
 		return ($this->getConfig()->getNested("red-spawn", "0:0:0:world") !== "0:0:0:world") and ($this->getConfig()->getNested("blue-spawn", "0:0:0:world") !== "0:0:0:world") && count($this->rooms) === 0;
+	}
+
+	public function check() : void{
+		if($this->canStart())
+			$this->setUpRoom();
 	}
 
 	public function syncGameTick() : void{
