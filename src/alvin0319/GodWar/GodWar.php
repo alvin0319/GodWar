@@ -153,10 +153,12 @@ class GodWar extends PluginBase{
 
 	public function setRedSpawn(Position $pos) : void{
 		$this->getConfig()->set("red-spawn", implode(":", [$pos->getFloorX(), $pos->getFloorY(), $pos->getFloorZ(), $pos->getLevel()->getFolderName()]));
+		$this->check();
 	}
 
 	public function setBlueSpawn(Position $pos) : void{
 		$this->getConfig()->set("blue-spawn", implode(":", [$pos->getFloorX(), $pos->getFloorY(), $pos->getFloorZ(), $pos->getLevel()->getFolderName()]));
+		$this->check();
 	}
 
 	public function recursiveRmdirWorld(string $dir) : void{
