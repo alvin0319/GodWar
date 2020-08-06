@@ -26,52 +26,22 @@
 declare(strict_types=1);
 namespace alvin0319\GodWar\form;
 
-use alvin0319\GodWar\GodWar;
-use alvin0319\GodWar\Room;
 use pocketmine\form\Form;
 use pocketmine\Player;
 use function is_int;
 
-class GodWarMainForm implements Form{
+class HowToPlayForm implements Form{
 
 	public function jsonSerialize() : array{
-		return [
-			"type" => "form",
-			"title" => "§aGodWar",
-			"content" => "",
-			"buttons" => [
-				["text" => "Exit"],
-				["text" => "Join the game"],
-				["text" => "How to play game"],
-				["text" => "Cancel the join"]
-			]
-		];
+		$rule = "Rule\n\n§lHow to win?§r\nTo win the game, you have to break the opponent's core using your skills and the skills of your teammates.\n\n§lWhy diamond blocks?§r\nWhen playing with blocks other than diamond blocks, the game may end quickly or take a long time.\n\n§lOkay, but do I have to break it with my hands?§r\nIf we use tools, the game could end too easily :(\n\n§lOkay, how do you use the skill?§r\nBefore using the skill, we need to collect stones using \"Stone Generator\" and then gamble using \"!betting\". Stone generators can be created using lava and water. In gambling, you can get various items such as stones, iron, diamonds, and skill items. If you're lucky, you can get diamonds too! The skill item is \"Blaze Stick\" and the skill is used when touching the ground.\n\n§lIf you have more questions, please create a new issue at \nhttps://github.com/alvin0319/GodWar!";
+		return ["type" => "form", "title" => "GodWar", "content" => $rule, "buttons" => [["text" => "exit"], ["text" => "back to main menu"]]];
 	}
 
 	public function handleResponse(Player $player, $data) : void{
 		if(is_int($data)){
 			switch($data){
 				case 1:
-					if(!GodWar::getInstance()->getRoomForPlayer($player) instanceof Room){
-						if(($room = GodWar::getInstance()->getAvailableRoom($player)) instanceof Room){
-							$room->addPlayer($player);
-						}else{
-							$player->sendMessage(GodWar::$prefix . "There are no available rooms.");
-						}
-					}else{
-						$player->sendMessage(GodWar::$prefix . "You can't join the room while in other room");
-					}
-					break;
-				case 2:
-					$player->sendForm(new HowToPlayForm());
-					break;
-				case 3:
-					if(($room = GodWar::getInstance()->getRoomForPlayer($player)) instanceof Room){
-						$room->removePlayer($player);
-						$player->sendMessage(GodWar::$prefix . "You have left the room.");
-					}else{
-						$player->sendMessage(GodWar::$prefix . "You have not entered any room.");
-					}
+					$player->sendForm(new GodWarMainForm());
 					break;
 			}
 		}
