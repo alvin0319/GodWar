@@ -4,7 +4,7 @@ main: alvin0319\GodWar\GodWar
 version: 1.0.0
 api: 3.0.0
 
-mcpe-protocol: 407
+mcpe-protocol: 408
 
 permissions:
   godwar.*:
