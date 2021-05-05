@@ -42,7 +42,7 @@ class TridentEntity extends Projectile{
 	public $width = 0.5;
 	public $height = 0.5;
 
-	protected $critical = false;
+	protected bool $critical = false;
 
 	public function onCollideWithPlayer(Player $player) : void{
 		$this->flagForDespawn();

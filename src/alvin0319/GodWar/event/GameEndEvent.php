@@ -32,7 +32,7 @@ use pocketmine\event\Event;
 class GameEndEvent extends Event{
 
 	/** @var GameResult */
-	protected $result;
+	protected GameResult $result;
 
 	public function __construct(GameResult $result){
 		$this->result = $result;

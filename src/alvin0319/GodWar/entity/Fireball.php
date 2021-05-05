@@ -40,7 +40,7 @@ class Fireball extends Projectile{
 	public $width = 0.1;
 	public $height = 0.1;
 
-	protected $aliveTicks = 20 * 10;
+	protected int $aliveTicks = 20 * 10;
 
 	public function onUpdate(int $currentTick) : bool{
 		$hasUpdate = parent::onUpdate($currentTick);

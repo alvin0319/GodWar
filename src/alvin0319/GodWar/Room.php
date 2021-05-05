@@ -55,45 +55,45 @@ class Room{
 	public const TEAM_BLUE = "blue";
 
 	/** @var int */
-	protected $id;
+	protected int $id;
 
 	/** @var string[] */
-	protected $players = [];
+	protected array $players = [];
 
 	/** @var Position */
-	protected $redSpawn;
+	protected Position $redSpawn;
 
 	/** @var Position */
-	protected $blueSpawn;
+	protected Position $blueSpawn;
 
 	/** @var Job[] */
-	protected $redTeam = [];
+	protected array $redTeam = [];
 
 	/** @var Job[] */
-	protected $blueTeam = [];
+	protected array $blueTeam = [];
 
 	/** @var bool */
-	protected $running = false;
+	protected bool $running = false;
 
 	/** @var int */
-	protected $timeLeft;
+	protected int $timeLeft;
 
 	/** @var int */
-	protected $progress;
+	protected int $progress;
 
 	/** @var string */
-	protected $worldName;
+	protected string $worldName;
 
-	protected $waitTime = 60;
+	protected int $waitTime = 60;
 
-	protected $minCount = 2;
+	protected int $minCount = 2;
 
-	protected $maxCount = 8;
+	protected int $maxCount = 8;
 
 	/** @var Server */
-	private $server;
+	private Server $server;
 
-	protected $skillBlocked = false;
+	protected bool $skillBlocked = false;
 
 	public function __construct(int $id, int $timeLeft, Position $redSpawn, Position $blueSpawn, string $worldName, int $minCount, int $maxCount){
 		$this->id = $id;

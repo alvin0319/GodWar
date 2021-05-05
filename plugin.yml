@@ -1,15 +1,15 @@
 name: GodWar
 author: alvin0319
 main: alvin0319\GodWar\GodWar
-version: 1.0.0
+version: 1.0.1
 api: 3.0.0
 
-mcpe-protocol: 408
+mcpe-protocol: 431
+
+extensions:
+  Core: '>=7.4'
 
 permissions:
-  godwar.*:
-    description: GodWar permission
-    children:
-      godwar.command:
-        description: GodWar command permission
-        default: op
+  godwar.command:
+    description: GodWar command permission
+    default: op

@@ -146,7 +146,7 @@ class EventListener implements Listener{
 				if(trim(substr($event->getMessage(), 0, 1)) === "!"){
 					if($event->getMessage() === "!help"){
 						$player->sendMessage(GodWar::$prefix . "!help - Help of the GodWar.");
-						$player->sendMessage(GodWar::$prefix . "!job - Info of your job.");
+						$player->sendMessage(GodWar::$prefix . "!job - Shows info of your job.");
 						$player->sendMessage(GodWar::$prefix . "!betting - Do a betting.");
 						$player->sendMessage(GodWar::$prefix . "Team chat is possible with \"!(message)\".");
 					}elseif($event->getMessage() === "!job"){

@@ -45,6 +45,10 @@ class GameResult{
 		return $this->room;
 	}
 
+	/**
+	 * Returns null if draw
+	 * @return string|null
+	 */
 	public function getWinner() : ?string{
 		return $this->winner;
 	}

@@ -55,20 +55,20 @@ use function unlink;
 
 class GodWar extends PluginBase{
 
-	public static $prefix = "§b§l[GodWar] §r§7";
+	public static string $prefix = "§b§l[GodWar] §r§7";
 
 	/** @var GodWar|null */
-	private static $instance = null;
+	private static ?GodWar $instance = null;
 
 	/** @var Config */
-	protected $invConfig;
+	protected Config $invConfig;
 
-	protected $db = [];
+	protected array $db = [];
 
 	/** @var Room[] */
-	protected $rooms = [];
+	protected array $rooms = [];
 
-	protected $roomIds = 0;
+	protected int $roomIds = 0;
 
 	public function onLoad() : void{
 		self::$instance = $this;

@@ -32,7 +32,7 @@ use pocketmine\scheduler\Task;
 
 class SleepTask extends Task{
 
-	protected $room;
+	protected Room $room;
 
 	public function __construct(Room $room){
 		$this->room = $room;

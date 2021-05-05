@@ -38,13 +38,13 @@ abstract class Job{
 	public const SKILL2_NAME = "skill2";
 
 	/** @var Player */
-	protected $player;
+	protected Player $player;
 
 	/** @var Room */
-	protected $room;
+	protected Room $room;
 
 	/** @var int[][] */
-	protected $coolTimes = [];
+	protected array $coolTimes = [];
 
 	public function __construct(Player $player, Room $room){
 		$this->player = $player;

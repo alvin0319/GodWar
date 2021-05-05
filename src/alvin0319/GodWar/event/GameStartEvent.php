@@ -32,7 +32,7 @@ use pocketmine\event\Event;
 class GameStartEvent extends Event{
 
 	/** @var Room */
-	protected $room;
+	protected Room $room;
 
 	public function __construct(Room $room){
 		$this->room = $room;

@@ -32,7 +32,7 @@ use pocketmine\scheduler\Task;
 class FlyTask extends Task{
 
 	/** @var Player */
-	protected $player;
+	protected Player $player;
 
 	public function __construct(Player $player){
 		$this->player = $player;
@@ -43,7 +43,6 @@ class FlyTask extends Task{
 			if($this->player->isOnline()){
 				$this->player->setFlying(false);
 				$this->player->setAllowFlight(false);
-
 			}
 		}
 	}
